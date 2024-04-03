@@ -1,9 +1,18 @@
+import os
+import sys
+import environ
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+env = environ.Env()
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+
+environ.Env.read_env('backend/.env')
+sys.path.append(str(PROJECT_ROOT / 'apps'))
 
 
-SECRET_KEY = 'django-insecure-#c(8oaf@e(5f#c=5(+y=41h0g#l=^f-t@7h4=qt1(_4^ogvj+7'
+SECRET_KEY = env('SECRET_KEY')
 
 DEBUG = True
 
@@ -11,6 +20,7 @@ ALLOWED_HOSTS = ['*']
 
 
 DJANGO_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -18,6 +28,13 @@ DJANGO_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+PROJECT_APPS = [
+    'common',
+    'products',
+]
+
+INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
