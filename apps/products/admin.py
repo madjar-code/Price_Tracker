@@ -1,5 +1,5 @@
 from django.contrib import admin
-
+from common.mixins.admin import ReadOnlyFieldsAdmin
 from .models import (
     Category,
     Product,
@@ -19,3 +19,16 @@ class ProductAdmin(admin.ModelAdmin):
         'category',
     )
     inlines = [PriceItemInline]
+
+
+@admin.register(Category)
+class CategoryAdmin(ReadOnlyFieldsAdmin):
+    list_display = (
+        'id',
+        'name',
+        'created_at',
+    )
+    list_display_links = (
+        'id',
+        'name',
+    )
