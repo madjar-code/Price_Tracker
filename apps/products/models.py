@@ -26,6 +26,7 @@ class Product(BaseModel):
         to=Category,
         blank=True,
         null=True,
+        related_name='products',
         on_delete=models.SET_NULL,
     )
 
@@ -37,14 +38,16 @@ class Product(BaseModel):
         return self.name
 
 
-class PriceItem(TimeStampModel):
+class PriceItem(
+        UUIDModel,
+        TimeStampModel
+    ):
     date = models.DateField()
     price = models.DecimalField(
         max_digits=7,
         decimal_places=2,
     )
     product = models.ForeignKey(
-        unique=True,
         to=Product,
         on_delete=models.CASCADE,
         related_name='price_items',
