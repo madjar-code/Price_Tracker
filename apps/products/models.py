@@ -44,6 +44,7 @@ class PriceItem(TimeStampModel):
         decimal_places=2,
     )
     product = models.ForeignKey(
+        unique=True,
         to=Product,
         on_delete=models.CASCADE,
         related_name='price_items',
@@ -52,7 +53,7 @@ class PriceItem(TimeStampModel):
     class Meta:
         verbose_name = 'Price Item'
         verbose_name_plural = 'Price Items'
-        ordering = ['date']
+        ordering = ['-date']
 
     def __str__(self) -> str:
         return f'{self.product} - {self.price} - {self.price}'
