@@ -34,11 +34,18 @@ PROJECT_APPS = [
     'products',
 ]
 
-INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS
+THIRD_PARTY_APPS = [
+    'rest_framework',
+    'drf_yasg',
+    'corsheaders',
+]
+
+INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -64,7 +71,26 @@ TEMPLATES = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'rest_framework.parsers.JSONParser',
+    )
+}
+
 WSGI_APPLICATION = 'backend.wsgi.application'
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:3000",
+]
 
 DATABASES = {
     'default': {
@@ -75,11 +101,19 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = []
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Chisinau'
 USE_I18N = True
 USE_TZ = True
+
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+API_TITLE = env.str('API_TITLE')
+API_VERSION = env.str('API_VERSION')
+API_DESCRIPTION = env.str('API_DESCRIPTION')
+API_TERMS_OF_SERVICE = env.str('API_TERMS_OF_SERVICE')
+API_CONTACT_EMAIL = env.str('API_CONTACT_EMAIL')
+API_LICENSE_NAME = env.str('API_LICENSE_NAME')
