@@ -1,3 +1,4 @@
+from typing import List, Dict
 from rest_framework.serializers import (
     ModelSerializer,
     SerializerMethodField,
@@ -5,6 +6,7 @@ from rest_framework.serializers import (
 from products.models import (
     Category,
     Product,
+    PriceItem,
 )
 
 
@@ -33,6 +35,16 @@ class UpdateCategorySerializer(ModelSerializer):
         )
 
 
+class PriceItemSerializer(ModelSerializer):
+    class Meta:
+        model = PriceItem
+        fields = (
+            'date',
+            'price',
+        )
+        read_only_fields = fields
+
+
 class SimpleProductSerializer(ModelSerializer):
     category_name = SerializerMethodField()
     class Meta:
@@ -49,3 +61,24 @@ class SimpleProductSerializer(ModelSerializer):
         if obj.category:
             return obj.category.name
         return None
+
+
+class ProductSerializer(ModelSerializer):
+    category = SimpleCategorySerializer()
+    price_items = SerializerMethodField()
+    class Meta:
+        model = Product
+        fields = (
+            'id',
+            'name',
+            'category',
+            'sku',
+            'description',
+            'price_items',
+        )
+        read_only_fields = fields
+
+    def get_price_items(self, obj: Product) -> List[Dict[str, str]]:
+        price_items = obj.price_items.all().order_by('-date')
+        serializer = PriceItemSerializer(price_items, many=True)
+        return serializer.data

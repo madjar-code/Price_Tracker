@@ -5,6 +5,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.generics import (
     ListAPIView,
+    RetrieveAPIView,
     DestroyAPIView,
     CreateAPIView,
     GenericAPIView,
@@ -19,6 +20,7 @@ from .serializers import (
     SimpleCategorySerializer,
     UpdateCategorySerializer,
     SimpleProductSerializer,
+    ProductSerializer,
 )
 
 
@@ -101,3 +103,22 @@ class ProductListView(ListAPIView):
     def get(self, request: Request, *args, **kwargs) -> Response:
         return super().get(request, *args, **kwargs)
 
+
+class ProductDetailsView(RetrieveAPIView):
+    serializer_class = ProductSerializer
+    queryset = Product.active_objects.all()
+    lookup_field = 'id'
+
+    @swagger_auto_schema(operation_id='product_details')
+    def get(self, request: Request, id: UUID) -> Response:
+        product: Product | None = self.queryset.filter(id=id).first()
+        if not product:
+            return Response(
+                {'error': ErrorMessages.NO_PRODUCT},
+                status.HTTP_404_NOT_FOUND,
+            )
+        serializer = self.serializer_class(instance=product)
+        return Response(
+            data=serializer.data,
+            status=status.HTTP_200_OK,
+        )
