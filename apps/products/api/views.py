@@ -13,10 +13,12 @@ from drf_yasg.utils import swagger_auto_schema
 
 from products.models import (
     Category,
+    Product,
 )
 from .serializers import (
     SimpleCategorySerializer,
     UpdateCategorySerializer,
+    SimpleProductSerializer,
 )
 
 
@@ -89,3 +91,13 @@ class CreateCategoryView(CreateAPIView):
             data=serializer.data,
             status=status.HTTP_201_CREATED,
         )
+
+
+class ProductListView(ListAPIView):
+    serializer_class = SimpleProductSerializer
+    queryset = Product.active_objects.all()
+
+    @swagger_auto_schema(operation_id='all_products')
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        return super().get(request, *args, **kwargs)
+
