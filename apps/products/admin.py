@@ -16,6 +16,7 @@ class PriceItemInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
         'name',
+        'sku',
         'category',
     )
     inlines = [PriceItemInline]
@@ -26,6 +27,7 @@ class CategoryAdmin(ReadOnlyFieldsAdmin):
     list_display = (
         'id',
         'name',
+        'updated_at',
         'created_at',
     )
     list_display_links = (
