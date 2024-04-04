@@ -9,15 +9,19 @@ class SimpleCategorySerializer(ModelSerializer):
             'id',
             'name',
         )
-        read_only_fields = fields
 
 
-class CategorySerializer(ModelSerializer):
+class UpdateCategorySerializer(ModelSerializer):
     class Meta:
         model = Category
         fields = (
             'id',
             'name',
-            'products',
+            'updated_at',
+            'created_at',
         )
-        read_only_fields = fields
+        read_only_fields = (
+            'id',
+            'updated_at',
+            'created_at',
+        )
