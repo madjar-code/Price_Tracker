@@ -122,3 +122,22 @@ class ProductDetailsView(RetrieveAPIView):
             data=serializer.data,
             status=status.HTTP_200_OK,
         )
+
+
+class DeleteProductView(DestroyAPIView):
+    queryset = Product.active_objects.all()
+    lookup_field = 'id'
+
+    @swagger_auto_schema(operation_id='delete_product')
+    def delete(self, request: Request, id: UUID) -> Response:
+        product: Product | None = self.queryset.filter(id=id).first()
+        if not product:
+            return Response(
+                {'error': ErrorMessages.NO_PRODUCT},
+                status.HTTP_404_NOT_FOUND,
+            )
+        product.delete()
+        return Response(
+            {'message': 'Deletion complete!'},
+            status.HTTP_204_NO_CONTENT,
+        )
