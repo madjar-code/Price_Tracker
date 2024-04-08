@@ -21,6 +21,7 @@ from .serializers import (
     UpdateCategorySerializer,
     SimpleProductSerializer,
     ProductSerializer,
+    UpdateCreateProductSerializer,
 )
 
 
@@ -118,6 +119,45 @@ class ProductDetailsView(RetrieveAPIView):
                 status.HTTP_404_NOT_FOUND,
             )
         serializer = self.serializer_class(instance=product)
+        return Response(
+            data=serializer.data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class CreateProductView(CreateAPIView):
+    serializer_class = UpdateCreateProductSerializer
+
+    @swagger_auto_schema(operation_id='create_product')
+    def post(self, request: Request) -> Response:
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            data=serializer.data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class UpdateProductView(GenericAPIView):
+    serializer_class = UpdateCreateProductSerializer
+    queryset = Product.active_objects.all()
+
+    @swagger_auto_schema(operation_id='update_product')
+    def patch(self, request: Request, id: UUID) -> Response:
+        product: Product | None = self.queryset.filter(id=id).first()
+        if not product:
+            return Response(
+                {'error': ErrorMessages.NO_PRODUCT},
+                status.HTTP_404_NOT_FOUND,
+            )
+        serializer = self.serializer_class(
+            instance=product,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(
             data=serializer.data,
             status=status.HTTP_200_OK,

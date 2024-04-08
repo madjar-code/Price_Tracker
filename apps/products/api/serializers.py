@@ -1,6 +1,14 @@
-from typing import List, Dict
+from enum import Enum
+from typing import (
+    Any,
+    List,
+    Dict,
+    NoReturn
+)
+from rest_framework import serializers
 from rest_framework.serializers import (
     ModelSerializer,
+    PrimaryKeyRelatedField,
     SerializerMethodField,
 )
 from products.models import (
@@ -8,6 +16,10 @@ from products.models import (
     Product,
     PriceItem,
 )
+
+
+class ErrorMessages(str, Enum):
+    NO_CATEGORY = 'Category with given `name` not found'
 
 
 class SimpleCategorySerializer(ModelSerializer):
@@ -82,3 +94,24 @@ class ProductSerializer(ModelSerializer):
         price_items = obj.price_items.all().order_by('-date')
         serializer = PriceItemSerializer(price_items, many=True)
         return serializer.data
+
+
+class UpdateCreateProductSerializer(ModelSerializer):
+    class Meta:
+        model = Product
+        fields = (
+            'id',
+            'name',
+            'sku',
+            'description',
+            'category',
+            'is_active',
+            'updated_at',
+            'created_at',
+        )
+        read_only_fields = (
+            'id',
+            'is_active',
+            'updated_at',
+            'created_at',
+        )
