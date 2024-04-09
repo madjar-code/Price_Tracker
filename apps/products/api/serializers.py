@@ -10,6 +10,7 @@ from typing import (
     Dict,
     NoReturn
 )
+from django.db.models import QuerySet
 from rest_framework import serializers
 from rest_framework.serializers import (
     ModelSerializer,
@@ -132,7 +133,7 @@ class SetPriceForPeriodSerializer(serializers.Serializer):
         decimal_places=2,
     )
 
-    def create_price_items(
+    def create_update_price_items(
             self,
             product_id: UUID,
             start_date: datetime,
@@ -140,21 +141,33 @@ class SetPriceForPeriodSerializer(serializers.Serializer):
             price: float
         ) -> None:
         product = Product.active_objects.get(id=product_id)
-        price_items = PriceItem.objects.filter(
+
+        price_items: QuerySet[PriceItem] = PriceItem.objects.filter(
             product=product,
-            date__range=[start_date, end_date]
+            date__range=[start_date, end_date],
         )
+        existing_price_items: Dict[datetime, PriceItem] = {
+            item.date: item for item in price_items
+        }
+        new_price_items: List[PriceItem] = list()
+
         for date in self.date_range(start_date, end_date):
-            price_item = price_items.filter(date=date).first()
-            if price_item:
-                price_item.price = price
-                price_item.save()
+            if date in existing_price_items:
+                existing_price_items[date].price = price
             else:
-                PriceItem.objects.create(
+                new_price_items.append(PriceItem(
                     product=product,
                     date=date,
-                    price=price,
-                )
+                    price=price
+                ))
+
+        if existing_price_items:
+            PriceItem.objects.bulk_update(
+                existing_price_items.values(),
+                ['price']
+            )
+        if new_price_items:
+            PriceItem.objects.bulk_create(new_price_items)
 
     def date_range(
             self,
@@ -186,5 +199,5 @@ class SetPriceForPeriodSerializer(serializers.Serializer):
         end_date = validated_data['end_date']
         price = validated_data['price']
 
-        self.create_price_items(product_id, start_date, end_date, price)
+        self.create_update_price_items(product_id, start_date, end_date, price)
         return validated_data
