@@ -119,6 +119,13 @@ class ProductListView(ListAPIView):
     serializer_class = SimpleProductSerializer
     queryset = Product.active_objects.all()
 
+    def get_queryset(self) -> QuerySet[Category]:
+        queryset = cache.get('product_list_queryset', None)
+        if queryset is None:
+            queryset = Product.objects.all()
+            cache.set('product_list_queryset', queryset, timeout=100)
+        return queryset
+
     @swagger_auto_schema(operation_id='all_products')
     def get(self, request: Request, *args, **kwargs) -> Response:
         return super().get(request, *args, **kwargs)
