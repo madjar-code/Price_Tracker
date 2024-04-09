@@ -15,6 +15,7 @@ class PriceItemInline(admin.TabularInline):
 @admin.register(Product)
 class ProductAdmin(ReadOnlyFieldsAdmin):
     list_display = (
+        'id',
         'name',
         'sku',
         'category',
