@@ -1,3 +1,8 @@
+from uuid import UUID
+from datetime import (
+    datetime,
+    timedelta,
+)
 from enum import Enum
 from typing import (
     Any,
@@ -8,7 +13,7 @@ from typing import (
 from rest_framework import serializers
 from rest_framework.serializers import (
     ModelSerializer,
-    PrimaryKeyRelatedField,
+    ValidationError,
     SerializerMethodField,
 )
 from products.models import (
@@ -20,6 +25,8 @@ from products.models import (
 
 class ErrorMessages(str, Enum):
     NO_CATEGORY = 'Category with given `name` not found'
+    DATE_ERROR = 'End date must be after start date'
+    NO_PRODUCT = 'Product with given `id` not found'
 
 
 class SimpleCategorySerializer(ModelSerializer):
@@ -54,7 +61,6 @@ class PriceItemSerializer(ModelSerializer):
             'date',
             'price',
         )
-        read_only_fields = fields
 
 
 class SimpleProductSerializer(ModelSerializer):
@@ -115,3 +121,70 @@ class UpdateCreateProductSerializer(ModelSerializer):
             'updated_at',
             'created_at',
         )
+
+
+class SetPriceForPeriodSerializer(serializers.Serializer):
+    product_id = serializers.UUIDField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    price = serializers.DecimalField(
+        max_digits=7,
+        decimal_places=2,
+    )
+
+    def create_price_items(
+            self,
+            product_id: UUID,
+            start_date: datetime,
+            end_date: datetime,
+            price: float
+        ) -> None:
+        product = Product.active_objects.get(id=product_id)
+        price_items = PriceItem.objects.filter(
+            product=product,
+            date__range=[start_date, end_date]
+        )
+        for date in self.date_range(start_date, end_date):
+            price_item = price_items.filter(date=date).first()
+            if price_item:
+                price_item.price = price
+                price_item.save()
+            else:
+                PriceItem.objects.create(
+                    product=product,
+                    date=date,
+                    price=price,
+                )
+
+    def date_range(
+            self,
+            start_date: datetime,
+            end_date: datetime,
+        ):
+        current_date = start_date
+        while current_date <= end_date:
+            yield current_date
+            current_date += timedelta(days=1)
+
+    def validate_product_id(self, value: str) -> NoReturn | str:
+        product = Product.objects.filter(id=value).first()
+        if not product:
+            raise ValidationError(ErrorMessages.NO_PRODUCT.value)
+        return value
+
+    def validate(self, attrs: Dict[str, Any]):
+        start_date = attrs.get('start_date')
+        end_date = attrs.get('end_date')
+        if start_date and end_date:
+            if start_date > end_date:
+                raise ValidationError(ErrorMessages.DATE_ERROR.value)
+        return attrs
+
+    def create(self, validated_data: Dict[str, Any]) -> Dict[str, Any]:
+        product_id = validated_data['product_id']
+        start_date = validated_data['start_date']
+        end_date = validated_data['end_date']
+        price = validated_data['price']
+
+        self.create_price_items(product_id, start_date, end_date, price)
+        return validated_data
