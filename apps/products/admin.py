@@ -13,7 +13,7 @@ class PriceItemInline(admin.TabularInline):
 
 
 @admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
+class ProductAdmin(ReadOnlyFieldsAdmin):
     list_display = (
         'name',
         'sku',
