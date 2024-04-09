@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 from uuid import UUID
 from django.db.models import Avg
@@ -37,6 +38,7 @@ class ErrorMessages(str, Enum):
     NO_PRODUCT = 'Product with given `id` not found'
     INVALID_DATE_FORMAT = 'Invalid date format. Date format should be YYYY-MM-DD.'
     BOTH_DATES_REQUIRED = 'Both start_date and end_date are required as query parameters.'
+    DATE_ORDER_ERROR = 'End date must be after start date'
 
 
 class CategoryListView(ListAPIView):
@@ -285,14 +287,23 @@ class GetPriceForPeriodView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        price_items = PriceItem.objects.filter(
+        if end_date < start_date:
+            return Response(
+                {'error': ErrorMessages.DATE_ORDER_ERROR},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        average_price = PriceItem.objects.filter(
             product=product,
             date__range=[start_date, end_date]
-        )
-        average_price = price_items.aggregate(avg_price=Avg('price'))
-        rounded_average_price = round(average_price['avg_price'], 2)
+        ).aggregate(avg_price=Avg('price'))
+
+        average_price: Decimal | None = average_price['avg_price']
+
+        if average_price is not None:
+            average_price = round(average_price, 2)
 
         return Response(
-            {'average_price': rounded_average_price},
+            {'average_price': average_price},
             status=status.HTTP_200_OK,
         )
