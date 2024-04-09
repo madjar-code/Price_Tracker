@@ -2,7 +2,8 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from uuid import UUID
-from django.db.models import Avg
+from django.core.cache import cache
+from django.db.models import Avg, QuerySet
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.request import Request
@@ -44,6 +45,13 @@ class ErrorMessages(str, Enum):
 class CategoryListView(ListAPIView):
     serializer_class = SimpleCategorySerializer
     queryset = Category.objects.all()
+
+    def get_queryset(self) -> QuerySet[Category]:
+        queryset = cache.get('category_list_queryset', None)
+        if queryset is None:
+            queryset = Category.objects.all()
+            cache.set('category_list_queryset', queryset, timeout=100)
+        return queryset
 
     @swagger_auto_schema(operation_id='all_categories')
     def get(self, request: Request, *args, **kwargs) -> Response:
