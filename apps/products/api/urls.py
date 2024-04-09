@@ -10,6 +10,9 @@ from .views import (
     DeleteProductView,
     UpdateProductView,
     CreateProductView,
+
+    SetPriceForPeriodView,
+    GetPriceForPeriodView,
 )
 
 
@@ -27,4 +30,7 @@ urlpatterns = [
     path('products/update/<str:id>/', UpdateProductView.as_view(), name='update_product'),
     path('products/delete/<str:id>/', DeleteProductView.as_view(), name='delete_product'),
     path('products/<str:id>/', ProductDetailsView.as_view(), name='product_details'),
+
+    path('prices/products/set-price/', SetPriceForPeriodView.as_view(), name='set_price_for_period'),
+    path('prices/products/get-price/<str:id>/', GetPriceForPeriodView.as_view(), name='get_avg_price_for_period'),
 ]
